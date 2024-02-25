@@ -13,7 +13,7 @@ export async function getUserByEmail(email: string) {
 		await setAsync(`user:${email}`, JSON.stringify(user));
 		return user;
 	}
-	return null;
+	return undefined;
 }
 
 export async function getUserById(id: string) {
@@ -27,5 +27,10 @@ export async function getUserById(id: string) {
 		await setAsync(`user:${id}`, JSON.stringify(user));
 		return user;
 	}
-	return null;
+	return undefined;
+}
+
+export async function updateUserCache(user: UserSchema) {
+	await setAsync(`user:${user._id}`, JSON.stringify(user));
+	await setAsync(`user:${user.email}`, JSON.stringify(user));
 }

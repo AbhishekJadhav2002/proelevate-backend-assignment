@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { Users } from '../models';
-import { RequestWithUser } from '../types';
+import { getUserById, updateUserCache } from '../services';
+import { RequestWithUser, UserSchema } from '../types';
 import { AppError } from '../utils/errors.utils';
 import { createHash, createToken } from '../utils/security.utils';
 
@@ -62,8 +63,10 @@ export async function getUser(
 ): Promise<void> {
 	try {
 		const { id } = req.params;
-		const user = await Users.findById(id, '-password -salt');
+		const user: undefined | Partial<UserSchema> = await getUserById(id);
 		if (!user) throw new AppError(404, 'User not found');
+		delete user.password;
+		delete user.salt;
 		res.json(user);
 	} catch (error) {
 		next(error);
@@ -77,8 +80,10 @@ export async function getMe(
 ): Promise<void> {
 	try {
 		const { id } = req.user!;
-		const user = await Users.findById(id, '-password -salt');
+		const user: undefined | Partial<UserSchema> = await getUserById(id);
 		if (!user) throw new AppError(404, 'User not found');
+		delete user.password;
+		delete user.salt;
 		res.json(user);
 	} catch (error) {
 		next(error);
@@ -92,11 +97,16 @@ export async function likeUser(
 ): Promise<void> {
 	try {
 		const { id } = req.params;
-		const user = await Users.findById(id);
+		const user: undefined | Partial<UserSchema> = await getUserById(id);
 		if (!user) throw new AppError(404, 'User not found');
-		const points = user.points + 1;
-		user.points = points;
-		await user.save();
+		const points = user.points! + 1;
+		const updatedUser = await Users.findByIdAndUpdate(
+			id,
+			{ points },
+			{ new: true },
+		);
+		if (!updatedUser) throw new AppError(400, 'Error while liking user');
+		await updateUserCache(updatedUser);
 		res.json({ message: `User '${user.name}' liked` });
 	} catch (error) {
 		next(error);
