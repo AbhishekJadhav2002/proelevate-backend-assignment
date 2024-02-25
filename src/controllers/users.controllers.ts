@@ -109,7 +109,9 @@ export async function getMostLiked(
 	next: NextFunction,
 ): Promise<void> {
 	try {
-		const users = await Users.find({}, '-password -salt').sort({ points: -1 });
+		const users = await Users.find({}, '-password -salt').sort({
+			points: -1,
+		});
 		if (!users) throw new AppError(404, 'Error getting users data');
 		res.json(users);
 	} catch (error) {
