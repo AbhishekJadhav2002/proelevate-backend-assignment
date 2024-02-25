@@ -1,5 +1,5 @@
-import { Users } from '../models';
-import { UserSchema } from '../types';
+import { Jobs, Users } from '../models';
+import { JobSchema, UserSchema } from '../types';
 import { getAsync, setAsync } from './redis.services';
 
 export async function getUserByEmail(email: string) {
@@ -33,4 +33,25 @@ export async function getUserById(id: string) {
 export async function updateUserCache(user: UserSchema) {
 	await setAsync(`user:${user._id}`, JSON.stringify(user));
 	await setAsync(`user:${user.email}`, JSON.stringify(user));
+}
+
+export async function getJobById(id: string) {
+	const cachedJob = await getAsync(`job:${id}`);
+	if (cachedJob) {
+		return JSON.parse(cachedJob) as JobSchema;
+	}
+
+	const job = await Jobs.findById(id).populate({
+		path: 'users',
+		select: 'name _id',
+	});
+	if (job) {
+		await setAsync(`job:${id}`, JSON.stringify(job));
+		return job;
+	}
+	return undefined;
+}
+
+export async function updateJobCache(job: JobSchema) {
+	await setAsync(`job:${job._id}`, JSON.stringify(job));
 }
