@@ -3,13 +3,13 @@
  * @params {`statusCode`, `message`}
  */
 export class AppError extends Error {
-    status: number;
+	status: number;
 
-    message: string;
+	message: string;
 
-    constructor(statusCode: number, message: string) {
-        super(message);
-        this.status = statusCode ?? 500;
-        this.message = message ?? 'Something went wrong';
-    }
+	constructor(statusCode: number, message: string) {
+		super(message);
+		this.status = statusCode ?? 500;
+		this.message = message ?? 'Something went wrong';
+	}
 }

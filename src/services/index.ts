@@ -1,7 +1,7 @@
 export {
-    default as connectRedis,
-    getAsync,
-    redisClient,
-    removeAsync,
-    setAsync
+	default as connectRedis,
+	getAsync,
+	redisClient,
+	removeAsync,
+	setAsync,
 } from './caching.services';
