@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { Users } from '../models';
+import { getUserByEmail, getUserById } from '../services';
 import { AppError } from '../utils/errors.utils';
 import {
 	comparePassword,
@@ -14,7 +14,7 @@ export async function login(
 ): Promise<void> {
 	try {
 		const { email, password } = req.body;
-		const user = await Users.findOne({ email });
+		const user = await getUserByEmail(email);
 		if (!user) throw new AppError(404, 'User not found');
 		const passwordMatch = comparePassword(
 			user.password,
@@ -51,6 +51,10 @@ export async function refreshToken(
 			process.env.REFRESH_TOKEN_SECRET as string,
 			'7d',
 		);
+
+		const user = await getUserById(id);
+		if (!user) throw new AppError(404, 'User not found');
+
 		const accessToken = createToken(
 			{ id },
 			process.env.ACCESS_TOKEN_SECRET as string,

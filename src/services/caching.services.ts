@@ -1,37 +1,31 @@
-import { createClient } from 'redis';
+import { Users } from '../models';
+import { UserSchema } from '../types';
+import { getAsync, setAsync } from './redis.services';
 
-const redisClient: ReturnType<typeof createClient> = createClient({
-	url: process.env.REDIS_URL,
-});
-
-redisClient.on('error', async (error: any) => {
-	console.log('❗ Error on Redis:', error);
-	await redisClient.quit();
-	process.exit(1);
-});
-
-async function connectRedis() {
-	try {
-		await redisClient.connect();
-		console.log('✅ Redis connected!');
-	} catch (error) {
-		console.log('❌ Error connecting to Redis:', error);
-		process.exit(1);
+export async function getUserByEmail(email: string) {
+	const cachedUser = await getAsync(`user:${email}`);
+	if (cachedUser) {
+		return JSON.parse(cachedUser) as UserSchema;
 	}
+
+	const user = await Users.findOne({ email });
+	if (user) {
+		await setAsync(`user:${email}`, JSON.stringify(user));
+		return user;
+	}
+	return null;
 }
 
-async function getAsync(key: string) {
-	const value = await redisClient.get(key);
-	return value;
-}
+export async function getUserById(id: string) {
+	const cachedUser = await getAsync(`user:${id}`);
+	if (cachedUser) {
+		return JSON.parse(cachedUser) as UserSchema;
+	}
 
-async function setAsync(key: string, value: string, expiry: number = 10000) {
-	await redisClient.set(key, value, { EX: expiry });
+	const user = await Users.findById(id);
+	if (user) {
+		await setAsync(`user:${id}`, JSON.stringify(user));
+		return user;
+	}
+	return null;
 }
-
-async function removeAsync(key: string) {
-	await redisClient.del(key);
-}
-
-export default connectRedis;
-export { getAsync, redisClient, removeAsync, setAsync };

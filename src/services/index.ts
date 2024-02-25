@@ -1,7 +1,8 @@
+export { getUserByEmail, getUserById } from './caching.services';
 export {
 	default as connectRedis,
 	getAsync,
 	redisClient,
 	removeAsync,
 	setAsync,
-} from './caching.services';
+} from './redis.services';
